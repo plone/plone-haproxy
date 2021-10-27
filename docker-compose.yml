@@ -1,4 +1,5 @@
-version: "2"
+version: "3"
+
 services:
   lb:
     image: plone/plone-haproxy
@@ -15,5 +16,24 @@ services:
       HTTPCHK: "GET /"
       INTER: "5s"
       LOG_LEVEL: "info"
+
   backend:
-    image: plone/plone-backend
+    image: plone/plone-backend:latest
+    restart: unless-stopped
+    environment:
+      ZEO_ADDRESS: zeo:8100
+    ports:
+    - "8080:8080"
+    depends_on:
+      - zeo
+
+  zeo:
+    image: plone/plone-zeo:latest
+    restart: unless-stopped
+    volumes:
+      - data:/data
+    ports:
+    - "8100:8100"
+
+volumes:
+  data: {}

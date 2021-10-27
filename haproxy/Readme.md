@@ -40,7 +40,7 @@ See [all versions](https://github.com/plone/plone-haproxy/releases)
 
 Here is a basic example of a `docker-compose.yml` file using the `plone/plone-haproxy` docker image:
 
-    version: "2"
+    version: "3"
     services:
       lb:
         image: plone/plone-haproxy
@@ -57,14 +57,31 @@ Here is a basic example of a `docker-compose.yml` file using the `plone/plone-ha
           HTTPCHK: "GET /"
           INTER: "5s"
           LOG_LEVEL: "info"
-      backend:
-        image: plone/plone-backend
 
+      backend:
+        image: plone/plone-backend:latest
+        restart: unless-stopped
+        environment:
+          ZEO_ADDRESS: zeo:8100
+        ports:
+        - "8080:8080"
+        depends_on:
+          - zeo
+
+      zeo:
+        image: plone/plone-zeo:latest
+        restart: unless-stopped
+        volumes:
+          - data:/data
+        ports:
+        - "8100:8100"
+
+    volumes:
+      data: {}
 
 The application can be scaled to use more server instances, with `docker-compose scale`:
 
-    $ docker-compose up -d
-    $ docker-compose scale backend=4
+    $ docker compose up -d --scale backend=4
 
 The results can be checked in a browser, navigating to http://localhost.
 By refresing the page multiple times it is noticeable that the IP of the server
